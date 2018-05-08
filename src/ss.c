@@ -95,6 +95,26 @@ do_ss_things(andl_context_t *andl_context)
     warn("There are %d places", andl_context->num_places);
     warn("There are %d in arcs", andl_context->num_in_arcs);
     warn("There are %d out arcs", andl_context->num_out_arcs);
+    warn("Current transition: %s", andl_context->current_trans);
+
+    for (int i = 0; i < andl_context->num_places; i++) {
+        warn("place: %s = %d", andl_context->places[i].name, andl_context->places[i].initial_marking);
+    }
+
+    for (int i = 0; i < andl_context->num_transitions; i++) {
+        transition_t *transition = andl_context->transitions + i;
+        warn("transition: %s", transition->name);
+
+        for (int j = 0; j < transition->num_arcs; j++) {
+            arc_t *arc = transition->arcs + j;
+
+            if (arc->dir == ARC_IN) {
+                warn("\tarc: %s (IN)", arc->place->name);
+            } else {
+                warn("\tarc: %s (OUT)", arc->place->name);
+            }
+        }
+    }
 }
 
 /**

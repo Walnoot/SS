@@ -21,6 +21,7 @@
 #include <config.h>
 #include <stdio.h>
 #include <andl.h>
+#include <string.h>
 #ifdef YYDEBUG
 #undef YYDEBUG
 #define YYDEBUG 1
@@ -119,6 +120,12 @@ pdecs
 /* single place declaration */
 pdec
     :   IDENT ASSIGN NUMBER SEMICOLON {
+            place_t p;
+            p.name = strdup($1);
+            p.identifier = andl_context->num_places;
+            p.initial_marking = $3;
+
+            andl_context->places[andl_context->num_places] = p;
             andl_context->num_places++;
             free($1);
         }
@@ -136,7 +143,6 @@ tdecs
 /* single transition declaration */
 tdec
     :   IDENT COLON conditions COLON {
-            andl_context->num_transitions++;
             /* free the string of the previous transition */
             if (andl_context->current_trans != NULL) {
                 free(andl_context->current_trans);
@@ -147,6 +153,14 @@ tdec
                 warn("out of memory");
                 YYABORT;
             }
+
+            transition_t transition;
+            transition.name = strdup($1);
+
+            andl_context->transitions[andl_context->num_transitions] = transition;
+
+            andl_context->num_transitions++;
+
             free($1);
         } arcs transition_function SEMICOLON
     |   IDENT error SEMICOLON {
@@ -183,6 +197,34 @@ arc
             } else { // $3 == ARC_OUT
                 andl_context->num_out_arcs++;
             }
+
+            // construct arc struct
+            arc_t arc;
+            arc.dir = $3;
+
+            int found = 0;
+
+            // find place
+            for (int i = 0; i < andl_context->num_places && !found; i++) {
+                char *name = andl_context->places[i].name;
+
+                if(strcmp($2, name) == 0) {
+                    arc.place = andl_context->places + i;
+                    found = 1;
+                }
+            }
+
+            if (!found) {
+                warn("Unknown place identifier \"%s\" on line %d", $2, @1.first_line);
+                andl_context->error = 1;
+            }
+
+            // add arc to transition
+            transition_t *cur_trans = andl_context->transitions + andl_context->num_transitions;
+
+            cur_trans->arcs[cur_trans->num_arcs] = arc;
+            cur_trans->num_arcs++;
+
            free($2);
         }
     |   LBRAC error RBRAC {

@@ -16,6 +16,26 @@ typedef enum {
     ARC_OUT,
 } arc_dir_t;
 
+typedef struct {
+    char *name;
+    int identifier;
+    int initial_marking;
+} place_t;
+
+typedef struct {
+    place_t *place;
+    arc_dir_t dir;
+} arc_t;
+
+typedef struct {
+    char *name;
+
+    // fixed number of arcs for now
+    arc_t arcs[100];
+    
+    int num_arcs;
+} transition_t;
+
 /**
  * \brief A struct to store information while parsing
  * an andl file.
@@ -41,6 +61,12 @@ typedef struct {
 
     // whether an error has occured during parsing
     int error;
+
+    // fixed size array for now, change later
+    place_t places[100];
+
+    // fixed size array for now, change later
+    transition_t transitions[100];
 } andl_context_t;
 
 #endif
