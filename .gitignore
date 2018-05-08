@@ -20,3 +20,7 @@ autotools
 /config.sub
 /libtool
 /ltmain.sh
+
+# test .dot output
+test.dot
+Petri-nets

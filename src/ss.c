@@ -80,6 +80,87 @@ deinit_sylvan()
     lace_exit();
 }
 
+BDD generate_initial_state(andl_context_t *andl_context) {
+    LACE_ME;
+
+    BDD init = sylvan_true;
+    sylvan_protect(&init);
+
+    for (int i = 0; i < andl_context->num_places; i++) {
+        place_t *place = andl_context->places + i;
+
+        // variable identifiers are 2*n for normal variables, and 2*n+1 for prime variables.
+
+        if (place->initial_marking == 0) {
+            init = sylvan_and(init, sylvan_nithvar(place->identifier * 2));
+        } else {
+            // assume initial marking is either 0 or 1, because 1-safe
+
+            init = sylvan_and(init, sylvan_ithvar(place->identifier * 2));
+        }
+    }
+
+    sylvan_unprotect(&init);
+    return init;
+}
+
+BDD generate_relation(transition_t *transition) {
+    LACE_ME;
+
+    BDD relation = sylvan_true;
+    sylvan_protect(&relation);
+
+    for (int i = 0; i < transition->num_arcs; i++) {
+        arc_t *arc = transition->arcs + i;
+
+        if (arc->dir == ARC_IN) {
+            // precondition
+            relation = sylvan_and(relation, sylvan_ithvar(arc->place->identifier * 2));
+
+            //postcondition
+            relation = sylvan_and(relation, sylvan_nithvar(arc->place->identifier * 2 + 1));
+        } else {
+            // postcondition
+            relation = sylvan_and(relation, sylvan_ithvar(arc->place->identifier * 2 + 1));
+        }
+    }
+
+    sylvan_unprotect(&relation);
+    return relation;
+}
+
+BDD generate_vars(transition_t *transition) {
+    LACE_ME;
+
+    BDD vars = sylvan_set_empty();
+    sylvan_protect(&vars);
+
+
+    for (int i = 0; i < transition->num_arcs; i++) {
+        arc_t *arc = transition->arcs + i;
+        vars = sylvan_set_add(vars, arc->place->identifier * 2);
+    }
+
+    sylvan_unprotect(&vars);
+    return vars;
+}
+
+BDD generate_map(andl_context_t *andl_context) {
+    LACE_ME;
+
+    BDD map = sylvan_map_empty();
+    sylvan_protect(&map);
+
+    for (int i = 0; i < andl_context->num_places; i++) {
+        place_t *place = andl_context->places + i;
+
+        map = sylvan_map_add(map, place->identifier * 2 + 1, sylvan_ithvar(place->identifier * 2));
+    }
+
+    sylvan_unprotect(&map);
+    return map;
+}
+
 /**
  * Here you should implement whatever is required for the Software Science lab class.
  * \p andl_context: The user context that is used while parsing
@@ -115,6 +196,56 @@ do_ss_things(andl_context_t *andl_context)
             }
         }
     }
+
+    LACE_ME;
+
+    BDD init = generate_initial_state(andl_context);
+    sylvan_protect(&init);
+
+    BDD *relations = malloc(andl_context->num_transitions * sizeof(BDD));
+    BDD *vars = malloc(andl_context->num_transitions * sizeof(BDD));
+
+    for (int i = 0; i < andl_context->num_transitions; i++) {
+        relations[i] = generate_relation(andl_context->transitions + i);
+        vars[i] = generate_vars(andl_context->transitions + i);
+    }
+
+    // bfs
+
+    BDD map = generate_map(andl_context);
+    sylvan_protect(&map);
+
+    BDD vOld = sylvan_set_empty();
+    BDD vNew = init;
+    sylvan_protect(&vOld);
+    sylvan_protect(&vNew);
+
+    int bfs_counter = 0;
+
+    while (vOld != vNew) {
+        vOld = vNew;
+
+        for (int i = 0; i < andl_context->num_transitions; i++) {
+            BDD relprod = sylvan_exists(sylvan_and(vNew, relations[i]), vars[i]);
+            relprod = sylvan_compose(relprod, map);
+
+            vNew = sylvan_or(vNew, relprod);
+        }
+
+        bfs_counter++;
+    }
+
+    printf("Number of loops: %d\n", bfs_counter);
+
+    free(relations);
+    free(vars);
+
+    int count = mtbdd_satcount(vNew, andl_context->num_places);
+    printf("SAT count: %d\n", count);
+
+    FILE *f = fopen("test.dot", "w+");
+    sylvan_fprintdot(f, vNew);
+    fclose(f);
 }
 
 /**
