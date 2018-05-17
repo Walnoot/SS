@@ -5,6 +5,7 @@ bin_PROGRAMS = ss
 ss_SOURCES  = ss.c
 ss_SOURCES += util.h util.c
 ss_SOURCES += andl-lexer.l andl-parser.y
+ss_SOURCES += ctl.h ctl.c
 
 ss_YFLAGS = -d
 ss_CFLAGS = $(SYLVAN_CFLAGS) $(XML_CFLAGS)
