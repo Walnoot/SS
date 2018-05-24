@@ -16,10 +16,10 @@ typedef enum StateKind {
 } state_kind_t;
 
 typedef enum PathKind {
-    P_STATE,
-    P_NEGATION,
-    P_CONJUNCTION,
-    P_DISJUNCTION,
+    //P_STATE,
+    //P_NEGATION,     //Not strictly needed for CTL
+    //P_CONJUNCTION,  //Not strictly needed for CTL
+    //P_DISJUNCTION,  //NOT strictly needed for CTL
     P_NEXT,
     P_EVENTUALLY,
     P_GLOBALLY,
@@ -40,9 +40,13 @@ typedef struct StateProperty {
 typedef struct PathProperty {
     path_kind_t pathKind;
     union {
-        struct{state_property_t *stateProperty;};       //STATE
-        struct{path_property_t *unary;};                //UNARY     (negation, next, eventually, globally)
-        struct{path_property_t *binary1, *binary2;};    //BINARY    (conjunction, disjunction, until, releases)
+        /* struct{state_property_t *stateProperty;};       //STATE
+         *
+         * I removed this^ case and changed *unary, *binary1 and *binary2 to type state_property_t. (orignally was path_property_t) -- Jan
+         * This change is allowed because of the shape of CTL formulas
+         */
+        struct{state_property_t *unary;};                //UNARY     (next, eventually, globally)       not implemented: negation
+        struct{state_property_t *binary1, *binary2;};    //BINARY    (until, releases)                  not implemented: conjunction, disjunction
     };
 } path_property_t;
 
