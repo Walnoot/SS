@@ -24,3 +24,6 @@ autotools
 # test .dot output
 test.dot
 Petri-nets
+
+#IntelliJ
+/.idea
