@@ -30,10 +30,9 @@ typedef struct {
 typedef struct {
     char *name;
 
-    // fixed number of arcs for now
-    arc_t arcs[100];
-    
+    arc_t *arcs;
     int num_arcs;
+    int arcs_buf_size;
 } transition_t;
 
 /**
@@ -62,11 +61,11 @@ typedef struct {
     // whether an error has occured during parsing
     int error;
 
-    // fixed size array for now, change later
-    place_t places[100];
+    place_t *places;
+    int place_buf_size;
 
-    // fixed size array for now, change later
-    transition_t transitions[100];
+    transition_t *transitions;
+    int transition_buf_size;
 } andl_context_t;
 
 #endif

@@ -125,6 +125,11 @@ pdec
             p.identifier = andl_context->num_places;
             p.initial_marking = $3;
 
+            if (andl_context->num_places >= andl_context->place_buf_size - 1) {
+                andl_context->place_buf_size *= 2;
+                andl_context->places = realloc(andl_context->places, andl_context->place_buf_size * sizeof(place_t));
+            }
+
             andl_context->places[andl_context->num_places] = p;
             andl_context->num_places++;
             free($1);
@@ -156,9 +161,18 @@ tdec
 
             transition_t transition;
             transition.name = strdup($1);
+            transition.num_arcs = 0;
+            transition.arcs_buf_size = 16;
+            transition.arcs = malloc(transition.arcs_buf_size * sizeof(arc_t));
+
+            if (andl_context->num_transitions >= andl_context->transition_buf_size - 1) {
+                andl_context->transition_buf_size *= 2;
+                andl_context->transitions = realloc(andl_context->transitions, andl_context->transition_buf_size * sizeof(transition_t));
+            }
+
+            //printf("transition %s, num trans: %d, buf size: %d\n", transition.name, andl_context->num_transitions, andl_context->transition_buf_size);
 
             andl_context->transitions[andl_context->num_transitions] = transition;
-
             andl_context->num_transitions++;
 
             free($1);
@@ -202,9 +216,8 @@ arc
             arc_t arc;
             arc.dir = $3;
 
-            int found = 0;
-
             // find place
+            int found = 0;
             for (int i = 0; i < andl_context->num_places && !found; i++) {
                 char *name = andl_context->places[i].name;
 
@@ -220,7 +233,18 @@ arc
             }
 
             // add arc to transition
-            transition_t *cur_trans = andl_context->transitions + andl_context->num_transitions;
+            int cur = andl_context->num_transitions;
+            transition_t *cur_trans = andl_context->transitions + andl_context->num_transitions - 1;
+
+            if (cur_trans->num_arcs >= cur_trans->arcs_buf_size - 1) {
+                cur_trans->arcs_buf_size *= 2;
+                cur_trans->arcs = realloc(cur_trans->arcs, cur_trans->arcs_buf_size * sizeof(transition_t));
+            }
+
+
+            //printf("arc, transition: %s, num arcs: %d, buf size: %d\n", cur_trans->name, cur_trans->num_arcs, cur_trans->arcs_buf_size);
+
+            //printf("%s (#%d)\n", (andl_context->transitions + 0)->name, andl_context->num_transitions);
 
             cur_trans->arcs[cur_trans->num_arcs] = arc;
             cur_trans->num_arcs++;

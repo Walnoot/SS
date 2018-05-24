@@ -35,6 +35,12 @@ load_andl(andl_context_t *andl_context, const char *name)
         // zero the andl_context
         memset(andl_context, 0, sizeof(andl_context_t));
 
+        andl_context->place_buf_size = 16;
+        andl_context->places = malloc(sizeof(place_t) * andl_context->place_buf_size);
+
+        andl_context->transition_buf_size = 16;
+        andl_context->transitions = malloc(sizeof(transition_t) * andl_context->transition_buf_size);
+
         // parse the andl file
         const int pres = andl_parse(scanner, andl_context);
 
@@ -176,26 +182,26 @@ do_ss_things(andl_context_t *andl_context)
     warn("There are %d places", andl_context->num_places);
     warn("There are %d in arcs", andl_context->num_in_arcs);
     warn("There are %d out arcs", andl_context->num_out_arcs);
-    warn("Current transition: %s", andl_context->current_trans);
+    // warn("Current transition: %s", andl_context->current_trans);
 
-    for (int i = 0; i < andl_context->num_places; i++) {
-        warn("place: %s = %d", andl_context->places[i].name, andl_context->places[i].initial_marking);
-    }
+    // for (int i = 0; i < andl_context->num_places; i++) {
+    //     warn("place: %s = %d", andl_context->places[i].name, andl_context->places[i].initial_marking);
+    // }
 
-    for (int i = 0; i < andl_context->num_transitions; i++) {
-        transition_t *transition = andl_context->transitions + i;
-        warn("transition: %s", transition->name);
+    // for (int i = 0; i < andl_context->num_transitions; i++) {
+    //     transition_t *transition = andl_context->transitions + i;
+    //     warn("transition: %s", transition->name);
 
-        for (int j = 0; j < transition->num_arcs; j++) {
-            arc_t *arc = transition->arcs + j;
+    //     for (int j = 0; j < transition->num_arcs; j++) {
+    //         arc_t *arc = transition->arcs + j;
 
-            if (arc->dir == ARC_IN) {
-                warn("\tarc: %s (IN)", arc->place->name);
-            } else {
-                warn("\tarc: %s (OUT)", arc->place->name);
-            }
-        }
-    }
+    //         if (arc->dir == ARC_IN) {
+    //             warn("\tarc: %s (IN)", arc->place->name);
+    //         } else {
+    //             warn("\tarc: %s (OUT)", arc->place->name);
+    //         }
+    //     }
+    // }
 
     LACE_ME;
 
@@ -414,6 +420,7 @@ int main(int argc, char** argv)
     int res;
     if (argc >= 2) {
         andl_context_t andl_context;
+
         const char *name = argv[1];
         res = load_andl(&andl_context, name);
         if (res) warn("Unable to parse file '%s'", name);
