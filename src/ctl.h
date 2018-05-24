@@ -30,7 +30,7 @@ typedef enum PathKind {
 typedef struct StateProperty {
     state_kind_t stateKind;
     union {
-        struct {BDD atom;};                             //ATOM
+        struct {BDD atom;};                             //ATOM      //TODO is BDD the correct type here? should it be a pointer to a BDD? should it be something else entirely?
         struct {state_property_t *unary;};              //UNARY     (negation)
         struct {state_property_t *binary1, *binary2;};  //BINARY    (conjunction, disjunction)
         struct {path_property_t *pathProperty;};        //PATH      (exists, forall)
@@ -46,6 +46,13 @@ typedef struct PathProperty {
     };
 } path_property_t;
 
-state_property_t normalize(state_property_t ast);
+/**
+ * Normalizes a CTL formula to only contain EU, EG and EX clauses.
+ * This function will free any pointers to subformulas that are rewritten.
+ *
+ * @param ast a pointer to the old CTL formula
+ * @return a pointer to the new CTL formula
+ */
+state_property_t *normalize(state_property_t *ast);
 
 #endif
