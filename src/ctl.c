@@ -168,7 +168,7 @@ state_property_t *normalize_AG(state_property_t *ast) {
 
 state_property_t *normalize_AF(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerFormula = pathProperty->unary;
+    state_property_t *innerFormula = normalize(pathProperty->unary);
 
     free(pathProperty);     //free F from the old AF formula
     free(ast);              //free A from the old AF formula
