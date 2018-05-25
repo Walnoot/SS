@@ -41,8 +41,6 @@ state_property_t *normalize(state_property_t *ast) {
     return ast;
 }
 
-//TODO expose these helper functions to the header?
-
 //basic building blocks
 state_property_t *makeTrue() {
     state_property_t *trueStateProperty = malloc(sizeof(state_property_t));
@@ -61,17 +59,10 @@ state_property_t *makeFalse() {
 
 //state properties
 state_property_t *negate(state_property_t *formula) {
-    if (formula->stateKind == S_NEGATION) {
-        //remove double negations on the AST level
-        state_property_t *unNegated = formula->unary;
-        free(formula);
-        return unNegated;
-    } else {
-        state_property_t *negation  = malloc(sizeof(state_property_t));
-        negation->stateKind         = S_NEGATION;
-        negation->unary             = formula;
-        return negation;
-    }
+    state_property_t *negation  = malloc(sizeof(state_property_t));
+    negation->stateKind         = S_NEGATION;
+    negation->unary             = formula;
+    return negation;
 }
 
 state_property_t *conjunction(state_property_t *formula1, state_property_t *formula2) {
@@ -147,7 +138,7 @@ path_property_t *releases(state_property_t *formula1, state_property_t *formula2
 //normalization cases
 state_property_t *normalize_EF(state_property_t *ast) {
     path_property_t *pathProperty   = ast->pathProperty;
-    state_property_t *innerFormula  = pathProperty->unary;
+    state_property_t *innerFormula  = normalize(pathProperty->unary);
 
     free(pathProperty); //free F from the old EF formula
     free(ast);          //free E from the old EF formula
@@ -157,7 +148,7 @@ state_property_t *normalize_EF(state_property_t *ast) {
 
 state_property_t *normalize_AX(state_property_t *ast) {
     path_property_t *pathProperty   = ast->pathProperty;
-    state_property_t *innerFormula  = pathProperty->unary;
+    state_property_t *innerFormula  = normalize(pathProperty->unary);
 
     free(pathProperty);     //free X from the old AX formula
     free(ast);              //free A from the old AX formula
@@ -167,7 +158,7 @@ state_property_t *normalize_AX(state_property_t *ast) {
 
 state_property_t *normalize_AG(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerFormula = pathProperty->unary;
+    state_property_t *innerFormula = normalize(pathProperty->unary);
 
     free(pathProperty);     //free G from the old AG formula
     free(ast);              //free A from the old AG formula
@@ -187,8 +178,8 @@ state_property_t *normalize_AF(state_property_t *ast) {
 
 state_property_t *normalize_AR(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerOne = pathProperty->binary1;
-    state_property_t *innerTwo = pathProperty->binary2;
+    state_property_t *innerOne = normalize(pathProperty->binary1);
+    state_property_t *innerTwo = normalize(pathProperty->binary2);
 
     free(pathProperty);     //free R from the old AR formula
     free(ast);              //free A from the old AR formula
@@ -198,8 +189,8 @@ state_property_t *normalize_AR(state_property_t *ast) {
 
 state_property_t *normalize_AU(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerOne = pathProperty->binary1;
-    state_property_t *innerTwo = pathProperty->binary2;
+    state_property_t *innerOne = normalize(pathProperty->binary1);
+    state_property_t *innerTwo = normalize(pathProperty->binary2);
 
     free(pathProperty);     //free U from the old AU formula
     free(ast);              //free A from the old AU formula
@@ -209,8 +200,8 @@ state_property_t *normalize_AU(state_property_t *ast) {
 
 state_property_t *normalize_ER(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerOne = pathProperty->binary1;
-    state_property_t *innerTwo = pathProperty->binary2;
+    state_property_t *innerOne = normalize(pathProperty->binary1);
+    state_property_t *innerTwo = normalize(pathProperty->binary2);
 
     free(pathProperty);     //free R from the old ER formula
     free(ast);              //free E from the old ER formula
