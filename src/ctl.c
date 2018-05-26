@@ -12,10 +12,12 @@ state_property_t *normalize_ER(state_property_t *ast);
 
 
 state_property_t *normalize(state_property_t *ast) {
+    state_kind_t stateKind = ast->stateKind;
+
     path_property_t *pathProperty = ast->pathProperty;
     path_kind_t pathKind = pathProperty->pathKind;
 
-    if (ast->stateKind == S_EXISTS) {
+    if (stateKind == S_EXISTS) {
         switch(pathKind) {
             case P_EVENTUALLY:
                 return normalize(normalize_EF(ast));
@@ -35,7 +37,7 @@ state_property_t *normalize(state_property_t *ast) {
                 return ast;
         }
     }
-    else if (ast->stateKind == S_FORALL) {
+    else if (stateKind == S_FORALL) {
         switch(pathKind) {
             case P_NEXT:
                 return normalize(normalize_AX(ast));
@@ -48,6 +50,15 @@ state_property_t *normalize(state_property_t *ast) {
             case P_UNTIL:
                 return normalize(normalize_AU(ast));
         }
+    }
+
+    //normalize inner formulas of non-TL formulas
+    //can't use pathProperty and pathKind from here!
+    else if (stateKind == S_NEGATION) {
+        ast->unary = normalize(ast->unary);
+    } else if (stateKind == S_CONJUNCTION || stateKind == S_DISJUNCTION) {
+        ast->binary1 = normalize(ast->binary1);
+        ast->binary2 = normalize(ast->binary2);
     }
 
     return ast;
@@ -150,7 +161,7 @@ path_property_t *releases(state_property_t *formula1, state_property_t *formula2
 //normalization cases
 state_property_t *normalize_EF(state_property_t *ast) {
     path_property_t *pathProperty   = ast->pathProperty;
-    state_property_t *innerFormula  = normalize(pathProperty->unary);
+    state_property_t *innerFormula  = pathProperty->unary;
 
     free(pathProperty); //free F from the old EF formula
     free(ast);          //free E from the old EF formula
@@ -160,7 +171,7 @@ state_property_t *normalize_EF(state_property_t *ast) {
 
 state_property_t *normalize_AX(state_property_t *ast) {
     path_property_t *pathProperty   = ast->pathProperty;
-    state_property_t *innerFormula  = normalize(pathProperty->unary);
+    state_property_t *innerFormula  = pathProperty->unary;
 
     free(pathProperty);     //free X from the old AX formula
     free(ast);              //free A from the old AX formula
@@ -170,7 +181,7 @@ state_property_t *normalize_AX(state_property_t *ast) {
 
 state_property_t *normalize_AG(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerFormula = normalize(pathProperty->unary);
+    state_property_t *innerFormula = pathProperty->unary;
 
     free(pathProperty);     //free G from the old AG formula
     free(ast);              //free A from the old AG formula
@@ -180,7 +191,7 @@ state_property_t *normalize_AG(state_property_t *ast) {
 
 state_property_t *normalize_AF(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerFormula = normalize(pathProperty->unary);
+    state_property_t *innerFormula = pathProperty->unary;
 
     free(pathProperty);     //free F from the old AF formula
     free(ast);              //free A from the old AF formula
@@ -190,8 +201,8 @@ state_property_t *normalize_AF(state_property_t *ast) {
 
 state_property_t *normalize_AR(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerOne = normalize(pathProperty->binary1);
-    state_property_t *innerTwo = normalize(pathProperty->binary2);
+    state_property_t *innerOne = pathProperty->binary1;
+    state_property_t *innerTwo = pathProperty->binary2;
 
     free(pathProperty);     //free R from the old AR formula
     free(ast);              //free A from the old AR formula
@@ -201,8 +212,8 @@ state_property_t *normalize_AR(state_property_t *ast) {
 
 state_property_t *normalize_AU(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerOne = normalize(pathProperty->binary1);
-    state_property_t *innerTwo = normalize(pathProperty->binary2);
+    state_property_t *innerOne = pathProperty->binary1;
+    state_property_t *innerTwo = pathProperty->binary2;
 
     free(pathProperty);     //free U from the old AU formula
     free(ast);              //free A from the old AU formula
@@ -212,8 +223,8 @@ state_property_t *normalize_AU(state_property_t *ast) {
 
 state_property_t *normalize_ER(state_property_t *ast) {
     path_property_t *pathProperty = ast->pathProperty;
-    state_property_t *innerOne = normalize(pathProperty->binary1);
-    state_property_t *innerTwo = normalize(pathProperty->binary2);
+    state_property_t *innerOne = pathProperty->binary1;
+    state_property_t *innerTwo = pathProperty->binary2;
 
     free(pathProperty);     //free R from the old ER formula
     free(ast);              //free E from the old ER formula
