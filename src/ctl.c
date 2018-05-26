@@ -21,6 +21,18 @@ state_property_t *normalize(state_property_t *ast) {
                 return normalize(normalize_EF(ast));
             case P_RELEASES:
                 return normalize(normalize_ER(ast));
+
+            //cases we want -- still need to normalize the inner formulas
+            case P_NEXT:
+            case P_GLOBALLY:
+                //unary case
+                pathProperty->unary = normalize(pathProperty->unary);
+                return ast;
+            case P_UNTIL:
+                //binary case
+                pathProperty->binary1 = normalize(pathProperty->binary1);
+                pathProperty->binary2 = normalize(pathProperty->binary2);
+                return ast;
         }
     }
     else if (ast->stateKind == S_FORALL) {

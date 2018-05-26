@@ -72,7 +72,8 @@ path_property_t *until(state_property_t *formula1, state_property_t *formula2);
 path_property_t *releases(state_property_t *formula1, state_property_t *formula2);
 
 /**
- * Normalizes a CTL formula to only contain EU, EG and EX clauses.
+ * Normalizes a CTL formula to only contain temporal logic clauses EU, EG and EX.
+ * Naturally, regular negations, conjunctions and disjunctions can be part of the resulting formula.
  * This function will free any pointers to subformulas that are rewritten.
  *
  * @param ast a pointer to the old CTL formula
