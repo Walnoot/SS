@@ -3,6 +3,47 @@
 #ifndef CTL_H
 #define CTL_H
 
+typedef enum {
+    CTL_ATOM,
+    CTL_NEGATION,
+    CTL_CONJUNCTION,
+    CTL_DISJUNCTION,
+    CTL_EX,
+    CTL_EF,
+    CTL_EG,
+    CTL_EU,
+    CTL_ER,
+    CTL_AX,
+    CTL_AF,
+    CTL_AG,
+    CTL_AU,
+    CTL_AR,
+} ctl_type_t;
+
+typedef struct
+{
+    ctl_type_t type;
+    union {
+        struct
+        {
+            ctl_node_t *left;
+            ctl_node_t *right;
+        } binary;
+
+        struct
+        {
+            ctl_node_t *child;
+        } unary;
+
+        struct
+        {
+            // not sure about this
+            int *fireable_transitions;
+            int num_transitions;
+        } atom;
+    };
+} ctl_node_t;
+
 typedef struct StateProperty state_property_t;
 typedef struct PathProperty path_property_t;
 
