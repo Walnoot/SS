@@ -156,7 +156,7 @@ ctl_node_t *normalize_ER(ctl_node_t *node) {
 	left->type = CTL_EU;
 
 	ctl_node_t *child_right = normalize(node->binary.right);
-	ctl_node_t *child_left = normalze(node->binary.left);
+	ctl_node_t *child_left = normalize(node->binary.left);
 
 	left->binary.left = child_right;
 	left->binary.right = conjunction(child_left, child_right);
