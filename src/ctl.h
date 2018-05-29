@@ -40,8 +40,9 @@ typedef struct ctl_node_t
 
         struct
         {
-            // not sure about this
             transition_t *fireable_transitions;
+
+            //value of -1 represents true value
             int num_transitions;
         } atom;
     };
@@ -79,5 +80,7 @@ ctl_node_t *ctl_make_AR(ctl_node_t *innerOne, ctl_node_t *innerTwo);
  * @return a pointer to the new CTL formula
  */
 ctl_node_t *normalize(ctl_node_t *ast);
+
+void print_ctl(ctl_node_t *ast);
 
 #endif

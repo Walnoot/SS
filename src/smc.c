@@ -8,29 +8,23 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD intial_state = generate_initial_state(andl_context);
-	BDD relation = sylvan_false;
-	BDD vars = sylvan_set_empty();
+	BDD *relations = malloc(sizeof(BDD) * andl_context->num_transitions);
+	BDD *vars = malloc(sizeof(BDD) * andl_context->num_transitions);
 
 	sylvan_protect(&intial_state);
-	sylvan_protect(&relation);
-	sylvan_protect(&vars);
 
 	for (int i = 0; i < andl_context->num_transitions; i++) {
-		relation = sylvan_or(relation, generate_relation(andl_context->transitions + i));
+		BDD relation = sylvan_or(relation, generate_relation(andl_context->transitions + i));
 		BDD variables = generate_vars(andl_context->transitions + i);
-		sylvan_protect(&variables);
 
-		while(!sylvan_set_isempty(variables)) {
-			vars = sylvan_set_add(vars, sylvan_set_first(variables));
-			variables = sylvan_set_next(variables);
-		}
-
-		sylvan_unprotect(&variables);
+		relations[i] = relation;
+		vars[i] = variables;
 	}
 	
 	smc_model_t *model = malloc(sizeof(smc_model_t));
-	model->relation = relation;
+	model->relations = relations;
 	model->variables = vars;
+	model->num_relations = andl_context->num_transitions;
 
 	BDD state_space = check_BDD(model, formula);
 	sylvan_protect(&state_space);
@@ -41,15 +35,11 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 
 	sylvan_unprotect(&intial_state);
 	sylvan_unprotect(&state_space);
-	sylvan_unprotect(&relation);
-	sylvan_unprotect(&vars);
 
 	return result;
 }
 
 BDD check_BDD(smc_model_t *model, ctl_node_t *formula) {
-	printf("Checking bdd\n");
-
 	switch(formula->type) {
 		case CTL_ATOM:
 			return check_BDD_atom(model, formula);
@@ -75,30 +65,36 @@ BDD check_BDD(smc_model_t *model, ctl_node_t *formula) {
 BDD check_BDD_atom(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 
-	BDD result = sylvan_false;
+	BDD result;
 	sylvan_protect(&result);
+	
+	if(formula->atom.num_transitions == -1) {
+		result = sylvan_true;
+	} else {
+		result = sylvan_false;
 
-	for (int i = 0; i < formula->atom.num_transitions; i++) {
-		// check precondition of transition
+		for (int i = 0; i < formula->atom.num_transitions; i++) {
+			// check precondition of transition
 
-		BDD transition_pre = sylvan_true;
-		sylvan_protect(&transition_pre);
+			BDD transition_pre = sylvan_true;
+			sylvan_protect(&transition_pre);
 
-		transition_t *transition = formula->atom.fireable_transitions + i;
+			transition_t *transition = formula->atom.fireable_transitions + i;
 
-		for (int j = 0; j < transition->num_arcs; j++) {
-			arc_t *arc = transition->arcs + j;
+			for (int j = 0; j < transition->num_arcs; j++) {
+				arc_t arc = transition->arcs[j];
 
-			if (arc->dir == ARC_IN) {
-				int identifier = arc->place->identifier;
+				if (arc.dir == ARC_IN) {
+					int identifier = arc.place->identifier;
 
-				transition_pre = sylvan_and(transition_pre, sylvan_ithvar(2 * identifier));
+					transition_pre = sylvan_and(transition_pre, sylvan_ithvar(2 * identifier));
+				}
 			}
+
+			result = sylvan_or(result, transition_pre);
+
+			sylvan_unprotect(&transition_pre);
 		}
-
-		result = sylvan_or(result, transition_pre);
-
-		sylvan_unprotect(&transition_pre);
 	}
 
 	sylvan_unprotect(&result);
@@ -127,13 +123,27 @@ BDD check_BDD_disjunction(smc_model_t *model, ctl_node_t *formula) {
 	return sylvan_or(left, right);
 }
 
+BDD prev(BDD space, smc_model_t *model) {
+	LACE_ME;
+
+	BDD result = sylvan_false;
+	sylvan_protect(&space);
+	sylvan_protect(&result);
+
+	for (int i = 0; i < model->num_relations; i++) {
+		result = sylvan_or(result, sylvan_relprev(model->relations[i], space, model->variables[i]));
+	}
+
+	sylvan_unprotect(&space);
+	sylvan_unprotect(&result);
+
+	return result;
+}
+
 BDD check_BDD_EX(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 	
-	BDD relation; //TODO: construct combined R from R1, R2...Rn
-	BDD vars;
-
-	return sylvan_relprev(relation, check_BDD(model, formula->unary.child), vars);
+	return prev(check_BDD(model, formula->unary.child), model);
 }
 
 BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
@@ -149,7 +159,8 @@ BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
 	BDD old = (BDD) NULL; //assume BDD identifiers are never equal to NULL
 	while (z != old) {
 		old = z;
-		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
+
+		z = sylvan_or(z, sylvan_and(a, prev(z, model)));
 	}
 
 	sylvan_unprotect(&a);
@@ -169,7 +180,7 @@ BDD check_BDD_EG(smc_model_t *model, ctl_node_t *formula) {
 	BDD old = (BDD) NULL; //assume BDD identifiers are never equal to NULL
 	while (z != old) {
 		old = z;
-		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
+		z = sylvan_or(z, sylvan_and(a, prev(z, model)));
 	}
 
 	sylvan_unprotect(&a);

@@ -45,14 +45,120 @@ ctl_node_t *normalize(ctl_node_t *node) {
 	    	return NULL;
     }
 
-    return node;
+    return NULL;
+}
+
+
+void print_ctl_rec(ctl_node_t *node) {
+	if (node == NULL) {
+		printf("NULL");
+		return;
+	}
+
+    switch(node->type) {
+	    case CTL_ATOM:
+	    	if (node->atom.num_transitions == -1) {
+	    		printf("TRUE");
+	    	} else {
+		    	printf("ATOM ");
+
+		    	for (int i = 0; i < node->atom.num_transitions; i++) {
+		    		printf("%s ", node->atom.fireable_transitions[i].name);
+		    	}
+	    	}
+
+	    	break;
+	    case CTL_NEGATION:
+	    	printf("NOT( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_CONJUNCTION:
+	    	printf("( ");
+	    	print_ctl_rec(node->binary.left);
+	    	printf(" AND ");
+	    	print_ctl_rec(node->binary.right);
+	    	printf(" )");
+	    	break;
+	    case CTL_DISJUNCTION:
+	    	printf("( ");
+	    	print_ctl_rec(node->binary.left);
+	    	printf(" OR ");
+	    	print_ctl_rec(node->binary.right);
+	    	printf(" )");
+	    	break;
+	    case CTL_EX:
+	    	printf("EX ( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_EF:
+	    	printf("EF ( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_EG:
+	    	printf("EG ( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_EU:
+	    	printf("E[ ");
+	    	print_ctl_rec(node->binary.left);
+	    	printf(" U ");
+	    	print_ctl_rec(node->binary.right);
+	    	printf(" ]");
+	    	break;
+	    case CTL_ER:
+	    	printf("E[ ");
+	    	print_ctl_rec(node->binary.left);
+	    	printf(" R ");
+	    	print_ctl_rec(node->binary.right);
+	    	printf(" ]");
+	    	break;
+	    case CTL_AX:
+	    	printf("AX ( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_AF:
+	    	printf("AF ( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_AG:
+	    	printf("AG ( ");
+	    	print_ctl_rec(node->unary.child);
+	    	printf(" )");
+	    	break;
+	    case CTL_AU:
+	    	printf("A[ ");
+	    	print_ctl_rec(node->binary.left);
+	    	printf(" U ");
+	    	print_ctl_rec(node->binary.right);
+	    	printf(" ]");
+	    	break;
+	    case CTL_AR:
+	    	printf("A[ ");
+	    	print_ctl_rec(node->binary.left);
+	    	printf(" R ");
+	    	print_ctl_rec(node->binary.right);
+	    	printf(" ]");
+	    	break;
+    }
+}
+
+
+void print_ctl(ctl_node_t *node) {
+	print_ctl_rec(node);
+	printf("\n");
 }
 
 //basic building blocks
 ctl_node_t *makeTrue() {
     ctl_node_t *trueStateProperty = malloc(sizeof(ctl_node_t));
     trueStateProperty->type = CTL_ATOM;
-    trueStateProperty->atom.num_transitions = 0;
+    trueStateProperty->atom.num_transitions = -1;
     return trueStateProperty;
 }
 
@@ -192,7 +298,7 @@ ctl_node_t *normalize_AG(ctl_node_t *node) {
 
 	free(node);
 
-    return normalize(negate(result));
+    return negate(normalize(result));
 }
 
 ctl_node_t *normalize_AF(ctl_node_t *node) {

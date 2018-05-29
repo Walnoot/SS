@@ -193,28 +193,36 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
         xmlNode *transitionNode = xmlFirstElementChild(node);
-        char* label = xmlNodeGetContent(transitionNode);
 
         ctl_node_t *atomNode = malloc(sizeof(ctl_node_t));
         atomNode->type = CTL_ATOM;
         atomNode->atom.num_transitions = 0;
         atomNode->atom.fireable_transitions = NULL;
 
+        int buf_size = 0;
+
         while (transitionNode != NULL) {
+            char* label = xmlNodeGetContent(transitionNode);
+
             //linear search the transitions for a transition with a matching name
             for (int i = 0; i < andl_context->num_transitions; i++) {
-                transition_t andlTransition = andl_context->transitions[i];
-                if (strcmp(andlTransition.name, label) == 0) {
+                transition_t *andl_transition = andl_context->transitions + i;
+
+                if (strcmp(andl_transition->name, label) == 0) {
                     //we found the transition with the same name!
 
-                    if (atomNode->atom.num_transitions == 0) {
-                        atomNode->atom.fireable_transitions = malloc(sizeof(transition_t));
-                    } else {
+                    if (buf_size == 0) {
+                        buf_size = 8;
+                        atomNode->atom.fireable_transitions = malloc(sizeof(transition_t) * buf_size);
+                    } else if (buf_size == atomNode->atom.num_transitions - 1) {
+                        buf_size *= 2;
+                        printf("buf size: %d\n", buf_size);
                         atomNode->atom.fireable_transitions = realloc(atomNode->atom.fireable_transitions,
-                                sizeof(transition_t) * (atomNode->atom.num_transitions + 1));
+                                sizeof(transition_t) * buf_size);
                     }
+
+                    atomNode->atom.fireable_transitions[atomNode->atom.num_transitions] = *andl_transition;
                     atomNode->atom.num_transitions++;
-                    atomNode->atom.fireable_transitions[i] = andlTransition;
                     break;
                 }
             }
@@ -256,8 +264,11 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
             //parse Before and parse Reach
             xmlNode *beforeChild    = xmlFirstElementChild(child);
             xmlNode *reachChild     = xmlNextElementSibling(beforeChild);
-            return ctl_make_AU(parse_formula_to_ctl(beforeChild, andl_context),
-                               parse_formula_to_ctl(reachChild, andl_context));
+
+            ctl_node_t *left = parse_formula_to_ctl(xmlFirstElementChild(beforeChild), andl_context);
+            ctl_node_t *right = parse_formula_to_ctl(xmlFirstElementChild(reachChild), andl_context);
+
+            return ctl_make_AU(left, right);
         }
     } //endif ForAll
     else if (xmlStrcmp(node->name, (const xmlChar*) "exists-path") == 0) {
@@ -277,8 +288,11 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
             //parse Before and parse Reach
             xmlNode *beforeChild    = xmlFirstElementChild(child);
             xmlNode *reachChild     = xmlNextElementSibling(beforeChild);
-            return ctl_make_EU(parse_formula_to_ctl(beforeChild, andl_context),
-                               parse_formula_to_ctl(reachChild, andl_context));
+
+            ctl_node_t *left = parse_formula_to_ctl(xmlFirstElementChild(beforeChild), andl_context);
+            ctl_node_t *right = parse_formula_to_ctl(xmlFirstElementChild(reachChild), andl_context);
+
+            return ctl_make_EU(left, right);
         }
     } //endif Exists
 
@@ -371,37 +385,20 @@ parse_formula(xmlNode *node)
     return res;
 }
 
-/**
- * \brief recursively parse the given XML node.
- */
-static ctl_node_t *parse_xml(xmlNode *node, andl_context_t *andl_context)
-{
+static ctl_node_t *parse_xml_property(xmlNode *node, andl_context_t *andl_context) {
     ctl_node_t *res = NULL;
-    // first check if the node is not a NULL pointer.
-    if (node == NULL) {
-        warn("Invalid XML");
-    // only parse xml nodes, skip other parts of the XML file.
-    } else if (node->type != XML_ELEMENT_NODE) res = parse_xml(xmlNextElementSibling(node), andl_context);
-    // parse property-set
-    else if (xmlStrcmp(node->name, (const xmlChar*) "property-set") == 0) {
-        // loop over all children that are property nodes
-        for (xmlNode *property = xmlFirstElementChild(node);
-                property != NULL && !res;
-                property = xmlNextElementSibling(property)) {
-            res = parse_xml(property, andl_context);
-        }
-    // parse property
-    } else if (xmlStrcmp(node->name, (const xmlChar*) "property") == 0) {
+
+    if (xmlStrcmp(node->name, (const xmlChar*) "property") == 0) {
         warn("parsing property");
-        res = parse_xml(xmlFirstElementChild(node), andl_context);
+        res = parse_xml_property(xmlFirstElementChild(node), andl_context);
     // parse id of property
     } else if (xmlStrcmp(node->name, (const xmlChar*) "id") == 0) {
         warn("Property id is: %s", xmlNodeGetContent(node));
-        res = parse_xml(xmlNextElementSibling(node), andl_context);
+        res = parse_xml_property(xmlNextElementSibling(node), andl_context);
     // parse description of property
     } else if (xmlStrcmp(node->name, (const xmlChar*) "description") == 0) {
         warn("Property description is: %s", xmlNodeGetContent(node));
-        res = parse_xml(xmlNextElementSibling(node), andl_context);
+        res = parse_xml_property(xmlNextElementSibling(node), andl_context);
     // parse the formula
     } else if (xmlStrcmp(node->name, (const xmlChar*) "formula") == 0) {
         warn("Parsing formula...");
@@ -417,11 +414,53 @@ static ctl_node_t *parse_xml(xmlNode *node, andl_context_t *andl_context)
 }
 
 /**
+ * \brief recursively parse the given XML node.
+ */
+static ctl_node_t **parse_xml(xmlNode *node, andl_context_t *andl_context)
+{
+    ctl_node_t **res = NULL;
+    int buf_size = 0;
+    int num_formulas = 0;
+
+    // first check if the node is not a NULL pointer.
+    if (node == NULL) {
+        warn("Invalid XML");
+    // only parse xml nodes, skip other parts of the XML file.
+    } else if (node->type != XML_ELEMENT_NODE) res = parse_xml(xmlNextElementSibling(node), andl_context);
+    // parse property-set
+    else if (xmlStrcmp(node->name, (const xmlChar*) "property-set") == 0) {
+        // loop over all children that are property nodes
+        for (xmlNode *property = xmlFirstElementChild(node);
+                property != NULL;
+                property = xmlNextElementSibling(property)) {
+            ctl_node_t *formula = parse_xml_property(property, andl_context);
+
+            if(buf_size == 0) {
+                buf_size = 8;
+                res = malloc(sizeof(ctl_node_t*) * buf_size);
+            } else if (num_formulas - 1 == buf_size) {
+                buf_size *= 2;
+
+                res = realloc(res, sizeof(ctl_node_t*) * buf_size);
+            }
+
+            res[num_formulas] = formula;
+            num_formulas++;
+        }
+    }
+
+    // add NULL terminator
+    res[num_formulas] = NULL;
+
+    return res;
+}
+
+/**
  * \brief parses the XML file name.
  *
  * \returns 0 on success, 1 on failure.
  */
-static ctl_node_t *load_xml(const char* name, andl_context_t *andl_context)
+static ctl_node_t **load_xml(const char* name, andl_context_t *andl_context)
 {
     int res;
 
@@ -454,28 +493,44 @@ int main(int argc, char** argv)
         res = load_andl(&andl_context, name);
         if (res) warn("Unable to parse file '%s'", name);
         else {
+            init_sylvan();
+
             warn("Successful parse of file '%s' :)", name);
             if (argc == 3) {
                 const char *formulas = argv[2];
-                ctl_node_t *ctl_formula = load_xml(formulas, &andl_context);
-                //TODO do something with the formula
-                return 1;
+                ctl_node_t **ctl_formulae = load_xml(formulas, &andl_context);
+
+                for (int i = 0; ctl_formulae[i] != NULL; i++) {
+                    ctl_node_t *formula = ctl_formulae[i];
+
+                    printf("\nformula %d\n\n", i);
+
+                    print_ctl(formula);
+
+                    ctl_node_t *normalized = normalize(formula);
+
+                    printf("\nnormalized %d\n\n", i);
+
+                    print_ctl(normalized);
+
+                    printf("\nSMC outcome for %d: %s\n\n", i, check(&andl_context, normalized) ? "T" : "F");
+                }
+
+                //TODO do something with the formulae
+
+                // printf("Input formula: \n");
+                // print_ctl(ctl_formula);
+
+                // ctl_node_t *norm = normalize(ctl_formula);
+
+                // printf("Reduced formula:\n");
+                // print_ctl(norm);
+
+                // printf("SMC check: %d\n", check(&andl_context, norm));
             }
-            init_sylvan();
+
             // execute the main body of code
             do_ss_things(&andl_context);
-
-            // test ctl formula, check if transition 0 is fireable
-            ctl_node_t *test = malloc(sizeof(ctl_node_t));
-            test->type = CTL_ATOM;
-            test->atom.num_transitions = 1;
-            test->atom.fireable_transitions[0] = andl_context.transitions[0];
-
-            test = normalize(test);
-
-            printf("type == atom? %d\n", test->type == CTL_ATOM);
-
-            printf("SMC on transition 0: %d\n", check(&andl_context, test));
 
             deinit_sylvan();
         }

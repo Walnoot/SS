@@ -7,9 +7,9 @@
 
 typedef struct
 {
-    BDD intial_state;
-    BDD relation;
-    BDD variables;
+	int num_relations;
+    BDD *relations;
+    BDD *variables;
 } smc_model_t;
 
 int check(andl_context_t *model, ctl_node_t *formula);
