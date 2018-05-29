@@ -257,6 +257,81 @@ do_ss_things(andl_context_t *andl_context)
     fclose(f);
 }
 
+ctl_node_t *parse_xml_to_ctl(xmlNode *node) {
+    if (node == NULL) {
+        warn("Invalid XML");
+        return NULL;
+    }
+    else if (node -> type != XML_ELEMENT_NODE) {
+        return parse_xml_to_ctl(xmlNextElementSibling(node));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "transition") == 0) {
+        //TODO what to do here?
+        return NULL:
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
+        //TODO has transitions as children.
+
+        return NULL;
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "negation") == 0) {
+        return negate(parse_xml_to_ctl(xmlFirstElementChild(node)));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "conjunction") == 0) {
+        xmlNode *first = xmlFirstElementChild(node);
+        xmlNode *second = xmlNextElementSibling(first);
+        return conjunction(parse_xml_to_ctl(first), parse_xml_to_ctl(second));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "disjunction") == 0) {
+        xmlNode *first = xmlFirstElementChild(node);
+        xmlNode *second = xmlNextElementSibling(first);
+        return disjunction(parse_xml_to_ctl(first), parse_xml_to_ctl(second));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "all-paths") == 0) {
+        //ForAll cases
+        xmlNode *child = xmlFirstElementChild(node);
+
+        if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_AG(parse_xml_to_ctl(grandchild));
+        }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_AF(parse_xml_to_ctl(grandChild));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "next") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_AX(parse_xml_to_ctl(grandChild));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "until") == 0) {
+            //parse Before and parse Reach
+            xmlNode *beforeChild    = xmlFirstElementChild(child);
+            xmlNode *reachChild     = xmlNextElementSibling(beforeChild);
+            return ctl_make_AU(parse_xml_to_ctl(beforeChild), parse_xml_to_ctl(reachChild));
+        }
+    } //endif ForAll
+    else if (xmlStrcmp(node->name, (const xmlChar*) "exists-path") == 0) {
+        //Exists cases
+        xmlNode *child = xmlFirstElementChild(node);
+
+        if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_EG(parse_xml_to_ctl(grandchild));
+        }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_EF(parse_xml_to_ctl(grandChild));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "next") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_EX(parse_xml_to_ctl(grandChild));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "until") == 0) {
+            //parse Before and parse Reach
+            xmlNode *beforeChild    = xmlFirstElementChild(child);
+            xmlNode *reachChild     = xmlNextElementSibling(beforeChild);
+            return ctl_make_EU(parse_xml_to_ctl(beforeChild), parse_xml_to_ctl(reachChild));
+        }
+    } //endif Exists
+
+
+    return NULL;
+}
+
 /**
  * \brief An in-order parser of the given XML node.
  *

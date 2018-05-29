@@ -56,6 +56,19 @@ ctl_node_t *negate(ctl_node_t *formula);
 ctl_node_t *conjunction(ctl_node_t *formula1, ctl_node_t *formula2);
 ctl_node_t *disjunction(ctl_node_t *formula1, ctl_node_t *formula2);
 
+//temporal operators
+ctl_node_t *ctl_make_EX(ctl_node_t *inner);
+ctl_node_t *ctl_make_EG(ctl_node_t *inner);
+ctl_node_t *ctl_make_EF(ctl_node_t *inner);
+ctl_node_t *ctl_make_EU(ctl_node_t *innerOne, ctl_node_t *innerTwo);
+ctl_node_t *ctl_make_ER(ctl_node_t *innerOne, ctl_node_t *innerTwo);
+ctl_node_t *ctl_make_AX(ctl_node_t *inner);
+ctl_node_t *ctl_make_AG(ctl_node_t *inner);
+ctl_node_t *ctl_make_AF(ctl_node_t *inner;
+ctl_node_t *ctl_make_AU(ctl_node_t *innerOne, ctl_node_t *innerTwo);
+ctl_node_t *ctl_make_AR(ctl_node_t *innerOne, ctl_node_t *innerTwo);
+
+
 /**
  * Normalizes a CTL formula to only contain temporal logic clauses EU, EG and EX.
  * Naturally, regular negations, conjunctions and disjunctions can be part of the resulting formula.
