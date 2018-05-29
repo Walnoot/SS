@@ -267,7 +267,7 @@ ctl_node_t *parse_xml_to_ctl(xmlNode *node) {
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "transition") == 0) {
         //TODO what to do here?
-        return NULL:
+        return NULL;
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
         //TODO has transitions as children.
@@ -293,7 +293,7 @@ ctl_node_t *parse_xml_to_ctl(xmlNode *node) {
 
         if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
-            return ctl_make_AG(parse_xml_to_ctl(grandchild));
+            return ctl_make_AG(parse_xml_to_ctl(grandChild));
         }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
             return ctl_make_AF(parse_xml_to_ctl(grandChild));
@@ -313,7 +313,7 @@ ctl_node_t *parse_xml_to_ctl(xmlNode *node) {
 
         if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
-            return ctl_make_EG(parse_xml_to_ctl(grandchild));
+            return ctl_make_EG(parse_xml_to_ctl(grandChild));
         }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
             return ctl_make_EF(parse_xml_to_ctl(grandChild));

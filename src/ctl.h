@@ -64,7 +64,7 @@ ctl_node_t *ctl_make_EU(ctl_node_t *innerOne, ctl_node_t *innerTwo);
 ctl_node_t *ctl_make_ER(ctl_node_t *innerOne, ctl_node_t *innerTwo);
 ctl_node_t *ctl_make_AX(ctl_node_t *inner);
 ctl_node_t *ctl_make_AG(ctl_node_t *inner);
-ctl_node_t *ctl_make_AF(ctl_node_t *inner;
+ctl_node_t *ctl_make_AF(ctl_node_t *inner);
 ctl_node_t *ctl_make_AU(ctl_node_t *innerOne, ctl_node_t *innerTwo);
 ctl_node_t *ctl_make_AR(ctl_node_t *innerOne, ctl_node_t *innerTwo);
 
