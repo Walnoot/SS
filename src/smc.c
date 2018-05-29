@@ -8,23 +8,29 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD intial_state = generate_initial_state(andl_context);
-	BDD *relations = malloc(sizeof(BDD) * andl_context->num_transitions);
-	BDD *vars = malloc(sizeof(BDD) * andl_context->num_transitions);
+	BDD relation = sylvan_false;
+	BDD vars = sylvan_set_empty();
 
 	sylvan_protect(&intial_state);
+	sylvan_protect(&relation);
+	sylvan_protect(&vars);
 
 	for (int i = 0; i < andl_context->num_transitions; i++) {
-		BDD relation = sylvan_or(relation, generate_relation(andl_context->transitions + i));
+		relation = sylvan_or(relation, generate_relation(andl_context->transitions + i));
 		BDD variables = generate_vars(andl_context->transitions + i);
+		sylvan_protect(&variables);
 
-		relations[i] = relation;
-		vars[i] = variables;
+		while(!sylvan_set_isempty(variables)) {
+			vars = sylvan_set_add(vars, sylvan_set_first(variables));
+			variables = sylvan_set_next(variables);
+		}
+
+		sylvan_unprotect(&variables);
 	}
 	
 	smc_model_t *model = malloc(sizeof(smc_model_t));
-	model->relations = relations;
+	model->relation = relation;
 	model->variables = vars;
-	model->num_relations = andl_context->num_transitions;
 
 	BDD state_space = check_BDD(model, formula);
 	sylvan_protect(&state_space);
@@ -35,6 +41,8 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 
 	sylvan_unprotect(&intial_state);
 	sylvan_unprotect(&state_space);
+	sylvan_unprotect(&relation);
+	sylvan_unprotect(&vars);
 
 	return result;
 }
@@ -123,27 +131,13 @@ BDD check_BDD_disjunction(smc_model_t *model, ctl_node_t *formula) {
 	return sylvan_or(left, right);
 }
 
-BDD prev(BDD space, smc_model_t *model) {
-	LACE_ME;
-
-	BDD result = sylvan_false;
-	sylvan_protect(&space);
-	sylvan_protect(&result);
-
-	for (int i = 0; i < model->num_relations; i++) {
-		result = sylvan_or(result, sylvan_relprev(model->relations[i], space, model->variables[i]));
-	}
-
-	sylvan_unprotect(&space);
-	sylvan_unprotect(&result);
-
-	return result;
-}
-
 BDD check_BDD_EX(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 	
-	return prev(check_BDD(model, formula->unary.child), model);
+	BDD relation; //TODO: construct combined R from R1, R2...Rn
+	BDD vars;
+
+	return sylvan_relprev(relation, check_BDD(model, formula->unary.child), vars);
 }
 
 BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
@@ -159,8 +153,7 @@ BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
 	BDD old = (BDD) NULL; //assume BDD identifiers are never equal to NULL
 	while (z != old) {
 		old = z;
-
-		z = sylvan_or(z, sylvan_and(a, prev(z, model)));
+		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
 	}
 
 	sylvan_unprotect(&a);
@@ -180,7 +173,7 @@ BDD check_BDD_EG(smc_model_t *model, ctl_node_t *formula) {
 	BDD old = (BDD) NULL; //assume BDD identifiers are never equal to NULL
 	while (z != old) {
 		old = z;
-		z = sylvan_or(z, sylvan_and(a, prev(z, model)));
+		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
 	}
 
 	sylvan_unprotect(&a);
