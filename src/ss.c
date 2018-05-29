@@ -178,6 +178,91 @@ do_ss_things(andl_context_t *andl_context)
     fclose(f);
 }
 
+ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
+    if (node == NULL) {
+        warn("Invalid XML");
+        return NULL;
+    }
+    else if (node -> type != XML_ELEMENT_NODE) {
+        return parse_formula_to_ctl(xmlNextElementSibling(node), andl_context);
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "transition") == 0) {
+        warn("Invalid XML - got transition node outside of an is-fireable node");
+        return NULL;
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
+        xmlNode *transitionNode = xmlFirstElementChild(node);
+
+        while (transitionNode != NULL) {
+            //TODO what to do with each transition?
+            //TODO build up result.
+
+            transitionNode = xmlNextElementSibling(transitionNode);
+        }
+
+        return NULL; //TODO return result
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "negation") == 0) {
+        return negate(parse_formula_to_ctl(xmlFirstElementChild(node), andl_context));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "conjunction") == 0) {
+        xmlNode *first = xmlFirstElementChild(node);
+        xmlNode *second = xmlNextElementSibling(first);
+        return conjunction(parse_formula_to_ctl(first, andl_context),
+                           parse_formula_to_ctl(second, andl_context));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "disjunction") == 0) {
+        xmlNode *first = xmlFirstElementChild(node);
+        xmlNode *second = xmlNextElementSibling(first);
+        return disjunction(parse_formula_to_ctl(first, andl_context),
+                           parse_formula_to_ctl(second, andl_context));
+    }
+    else if (xmlStrcmp(node->name, (const xmlChar*) "all-paths") == 0) {
+        //ForAll cases
+        xmlNode *child = xmlFirstElementChild(node);
+
+        if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_AG(parse_formula_to_ctl(grandChild, andl_context));
+        }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_AF(parse_formula_to_ctl(grandChild, andl_context));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "next") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_AX(parse_formula_to_ctl(grandChild, andl_context));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "until") == 0) {
+            //parse Before and parse Reach
+            xmlNode *beforeChild    = xmlFirstElementChild(child);
+            xmlNode *reachChild     = xmlNextElementSibling(beforeChild);
+            return ctl_make_AU(parse_formula_to_ctl(beforeChild, andl_context),
+                               parse_formula_to_ctl(reachChild, andl_context));
+        }
+    } //endif ForAll
+    else if (xmlStrcmp(node->name, (const xmlChar*) "exists-path") == 0) {
+        //Exists cases
+        xmlNode *child = xmlFirstElementChild(node);
+
+        if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_EG(parse_formula_to_ctl(grandChild, andl_context));
+        }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_EF(parse_formula_to_ctl(grandChild, andl_context));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "next") == 0) {
+            xmlNode *grandChild = xmlFirstElementChild(child);
+            return ctl_make_EX(parse_formula_to_ctl(grandChild, andl_context));
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "until") == 0) {
+            //parse Before and parse Reach
+            xmlNode *beforeChild    = xmlFirstElementChild(child);
+            xmlNode *reachChild     = xmlNextElementSibling(beforeChild);
+            return ctl_make_EU(parse_formula_to_ctl(beforeChild, andl_context),
+                               parse_formula_to_ctl(reachChild, andl_context));
+        }
+    } //endif Exists
+
+    return NULL;
+}
+
 /**
  * \brief An in-order parser of the given XML node.
  *
@@ -267,44 +352,42 @@ parse_formula(xmlNode *node)
 /**
  * \brief recursively parse the given XML node.
  */
-static int
-parse_xml(xmlNode *node)
+static ctl_node_t *parse_xml(xmlNode *node, andl_context_t *andl_context)
 {
-    int res = 0;
+    ctl_node_t *res = NULL;
     // first check if the node is not a NULL pointer.
     if (node == NULL) {
-        res = 1;
         warn("Invalid XML");
     // only parse xml nodes, skip other parts of the XML file.
-    } else if (node->type != XML_ELEMENT_NODE) res = parse_xml(xmlNextElementSibling(node));
+    } else if (node->type != XML_ELEMENT_NODE) res = parse_xml(xmlNextElementSibling(node), andl_context);
     // parse property-set
     else if (xmlStrcmp(node->name, (const xmlChar*) "property-set") == 0) {
         // loop over all children that are property nodes
         for (xmlNode *property = xmlFirstElementChild(node);
                 property != NULL && !res;
                 property = xmlNextElementSibling(property)) {
-            res = parse_xml(property);
+            res = parse_xml(property, andl_context);
         }
     // parse property
     } else if (xmlStrcmp(node->name, (const xmlChar*) "property") == 0) {
         warn("parsing property");
-        res = parse_xml(xmlFirstElementChild(node));
+        res = parse_xml(xmlFirstElementChild(node), andl_context);
     // parse id of property
     } else if (xmlStrcmp(node->name, (const xmlChar*) "id") == 0) {
         warn("Property id is: %s", xmlNodeGetContent(node));
-        res = parse_xml(xmlNextElementSibling(node));
+        res = parse_xml(xmlNextElementSibling(node), andl_context);
     // parse description of property
     } else if (xmlStrcmp(node->name, (const xmlChar*) "description") == 0) {
         warn("Property description is: %s", xmlNodeGetContent(node));
-        res = parse_xml(xmlNextElementSibling(node));
+        res = parse_xml(xmlNextElementSibling(node), andl_context);
     // parse the formula
     } else if (xmlStrcmp(node->name, (const xmlChar*) "formula") == 0) {
         warn("Parsing formula...");
-        res = parse_formula(xmlFirstElementChild(node));
+        res = parse_formula_to_ctl(xmlFirstElementChild(node), andl_context);
         printf("\n");
     // node not recognized
     } else {
-        res = 1;
+        res = NULL;
         warn("Invalid xml node '%s'", node->name);
     }
 
@@ -316,21 +399,21 @@ parse_xml(xmlNode *node)
  *
  * \returns 0 on success, 1 on failure.
  */
-static int
-load_xml(const char* name)
+static ctl_node_t *load_xml(const char* name, andl_context_t *andl_context)
 {
     int res;
 
     LIBXML_TEST_VERSION
     warn("parsing formulas file: %s", name);
     xmlDoc *doc = xmlReadFile(name, NULL, 0);
-    if (doc == NULL) res = 1;
+    if (doc == NULL) {
+        warn("unable to read xml file: %s", name);
+        return NULL;
+    }
     else {
         xmlNode *node = xmlDocGetRootElement(doc);
-        res = parse_xml(node);
+        return parse_xml(node, andl_context);
     }
-
-    return res;
 }
 
 /**
@@ -352,8 +435,9 @@ int main(int argc, char** argv)
             warn("Successful parse of file '%s' :)", name);
             if (argc == 3) {
                 const char *formulas = argv[2];
-                res = load_xml(formulas);
-                if (res) warn("Unable to load xml '%s'", formulas);
+                ctl_node_t *ctl_formula = load_xml(formulas, &andl_context);
+                //TODO do something with the formula
+                return 1;
             }
             init_sylvan();
             // execute the main body of code
