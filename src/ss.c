@@ -266,13 +266,20 @@ ctl_node_t *parse_xml_to_ctl(xmlNode *node) {
         return parse_xml_to_ctl(xmlNextElementSibling(node));
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "transition") == 0) {
-        //TODO what to do here?
+        //TODO what to do here? I don't think this case is needed.
         return NULL;
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
-        //TODO has transitions as children.
+        xmlNode *transitionNode = xmlFirstElementChild(node);
 
-        return NULL;
+        while (transitionNode != NULL) {
+            //TODO what to do with each transition?
+            //TODO build up result.
+
+            transitionNode = xmlNextElementSibling(transitionNode);
+        }
+
+        return NULL; //TODO return result
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "negation") == 0) {
         return negate(parse_xml_to_ctl(xmlFirstElementChild(node)));
