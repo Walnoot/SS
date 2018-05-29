@@ -81,6 +81,7 @@ ctl_node_t *disjunction(ctl_node_t *formula1, ctl_node_t *formula2) {
 
 
 //TL constructors
+//Exists
 ctl_node_t *ctl_make_EX(ctl_node_t *inner) {
     ctl_node_t *ex  = malloc(sizeof(ctl_node_t));
     ex->type = CTL_EX;
@@ -117,7 +118,43 @@ ctl_node_t *ctl_make_ER(ctl_node_t *innerOne, ctl_node_t *innerTwo) {
     er->binary.right = innerTwo;
     return er;
 }
-//TODO TL constructors starting with A (forall)
+//ForAll
+ctl_node_t *ctl_make_AX(ctl_node_t *inner) {
+    ctl_node_t *ax  = malloc(sizeof(ctl_node_t));
+    ax->type = CTL_AX;
+    ax->unary.child = inner;
+    return ax;
+}
+
+ctl_node_t *ctl_make_AG(ctl_node_t *inner) {
+    ctl_node_t *ag = malloc(sizeof(ctl_node_t));
+    ag->type = CTL_AG;
+    ag->unary.child = inner;
+    return ag;
+}
+
+ctl_node_t *ctl_make_AF(ctl_node_t *inner) {
+    ctl_node_t *af = malloc(sizeof(ctl_node_t));
+    af->type = CTL_AF;
+    af->unary.child = inner;
+    return af;
+}
+
+ctl_node_t *ctl_make_AU(ctl_node_t *innerOne, ctl_node_t *innerTwo) {
+    ctl_node_t *au  = malloc(sizeof(ctl_node_t));
+    au->type = CTL_AU;
+    au->binary.left = innerOne;
+    au->binary.right = innerTwo;
+    return au;
+}
+
+ctl_node_t *ctl_make_AR(ctl_node_t *innerOne, ctl_node_t *innerTwo) {
+    ctl_node_t *ar  = malloc(sizeof(ctl_node_t));
+    ar->type = CTL_AR;
+    ar->binary.left = innerOne;
+    ar->binary.right = innerTwo;
+    return ar;
+}
 
 
 
@@ -190,7 +227,7 @@ ctl_node_t *normalize_AU(ctl_node_t *node) {
 
 	free(node);
 
-    return normalize(negate(result));
+    return negate(normalize(result));
 }
 
 ctl_node_t *normalize_ER(ctl_node_t *node) {
