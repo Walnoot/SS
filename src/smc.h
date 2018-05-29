@@ -1,5 +1,6 @@
 #include <sylvan.h>
 #include <ctl.h>
+#include "andl.h"
 
 #ifndef SMC_H
 #define SMC_H
@@ -7,11 +8,11 @@
 typedef struct
 {
     BDD intial_state;
-    BDD *relations;
-    BDD *variables;
+    BDD relation;
+    BDD variables;
 } smc_model_t;
 
-BDD check(smc_model_t *model, ctl_node_t *formula);
+int check(andl_context_t *model, ctl_node_t *formula);
 
 BDD check_BDD(smc_model_t *model, ctl_node_t *formula);
 BDD check_BDD_atom(smc_model_t *model, ctl_node_t *formula);
