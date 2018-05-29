@@ -1,6 +1,7 @@
 #include <config.h>
 
 #include <stdio.h>
+#include <string.h>
 
 #include <sylvan.h>
 
@@ -192,15 +193,36 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
         xmlNode *transitionNode = xmlFirstElementChild(node);
+        char* label = xmlNodeGetContent(transitionNode);
+
+        ctl_node_t *atomNode = malloc(sizeof(ctl_node_t));
+        atomNode->type = CTL_ATOM;
+        atomNode->atom.num_transitions = 0;
+        atomNode->atom.fireable_transitions = NULL;
 
         while (transitionNode != NULL) {
-            //TODO what to do with each transition?
-            //TODO build up result.
+            //linear search the transitions for a transition with a matching name
+            for (int i = 0; i < andl_context->num_transitions; i++) {
+                transition_t andlTransition = andl_context->transitions[i];
+                if (strcmp(andlTransition.name, label) == 0) {
+                    //we found the transition with the same name!
+
+                    if (atomNode->atom.num_transitions == 0) {
+                        atomNode->atom.fireable_transitions = malloc(sizeof(transition_t));
+                    } else {
+                        atomNode->atom.fireable_transitions = realloc(atomNode->atom.fireable_transitions,
+                                sizeof(transition_t) * (atomNode->atom.num_transitions + 1));
+                    }
+                    atomNode->atom.num_transitions++;
+                    atomNode->atom.fireable_transitions[i] = andlTransition;
+                    break;
+                }
+            }
 
             transitionNode = xmlNextElementSibling(transitionNode);
         }
 
-        return NULL; //TODO return result
+        return atomNode;
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "negation") == 0) {
         return negate(parse_formula_to_ctl(xmlFirstElementChild(node), andl_context));
