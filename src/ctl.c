@@ -192,7 +192,7 @@ ctl_node_t *normalize_AG(ctl_node_t *node) {
 
 	free(node);
 
-    return normalize(negate(result));
+    return negate(normalize(result));
 }
 
 ctl_node_t *normalize_AF(ctl_node_t *node) {
