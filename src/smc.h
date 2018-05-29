@@ -1,5 +1,5 @@
 #include <sylvan.h>
-#include <ctl.h>
+#include "ctl.h"
 #include "andl.h"
 
 #ifndef SMC_H
