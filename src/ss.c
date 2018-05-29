@@ -11,6 +11,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+//to create our fancy CTL ast
+#include "ctl.h"
+
 /**
  * Load the andl file in \p name.
  * \p andl_context: The user context available when paring the andl file.
