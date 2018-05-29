@@ -14,6 +14,7 @@
 
 //to create our fancy CTL ast
 #include "ctl.h"
+#include "smc.h"
 
 #include "state_space.h"
 
