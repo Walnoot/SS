@@ -358,6 +358,14 @@ int main(int argc, char** argv)
             init_sylvan();
             // execute the main body of code
             do_ss_things(&andl_context);
+
+            ctl_node_t *test = malloc(sizeof(ctl_node_t));
+            test->type = CTL_ATOM;
+            test->atom.num_transitions = 1;
+            test->atom.fireable_transitions[0] = andl_context.transitions[0];
+
+            printf("SMC on transition 0: %d\n", check(&andl_context, test));
+
             deinit_sylvan();
         }
     } else {

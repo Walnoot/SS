@@ -3,6 +3,7 @@
 #include <sylvan.h>
 
 #include "state_space.h"
+
 int check(andl_context_t *andl_context, ctl_node_t *formula) {
 	LACE_ME;
 	
@@ -140,7 +141,7 @@ BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
 	BDD old = (BDD) NULL; //assume BDD identifiers are never equal to NULL
 	while (z != old) {
 		old = z;
-		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->vars)));
+		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
 	}
 
 	sylvan_unprotect(&a);
