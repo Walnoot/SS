@@ -35,6 +35,8 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 	BDD state_space = check_BDD(model, formula);
 	sylvan_protect(&state_space);
 
+	// printf("SMC SAT count: %f\n", mtbdd_satcount(state_space, andl_context->num_places));
+
 	int result = sylvan_and(intial_state, sylvan_not(state_space)) == sylvan_false;
 
 	sylvan_unprotect(&intial_state);
@@ -46,6 +48,8 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 }
 
 BDD check_BDD(smc_model_t *model, ctl_node_t *formula) {
+	printf("Checking bdd\n");
+
 	switch(formula->type) {
 		case CTL_ATOM:
 			return check_BDD_atom(model, formula);
@@ -81,14 +85,18 @@ BDD check_BDD_atom(smc_model_t *model, ctl_node_t *formula) {
 		sylvan_protect(&transition_pre);
 
 		transition_t *transition = formula->atom.fireable_transitions + i;
+
 		for (int j = 0; j < transition->num_arcs; j++) {
 			arc_t *arc = transition->arcs + j;
 
 			if (arc->dir == ARC_IN) {
 				int identifier = arc->place->identifier;
+
 				transition_pre = sylvan_and(transition_pre, sylvan_ithvar(2 * identifier));
 			}
 		}
+
+		result = sylvan_or(result, transition_pre);
 
 		sylvan_unprotect(&transition_pre);
 	}

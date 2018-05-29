@@ -443,10 +443,15 @@ int main(int argc, char** argv)
             // execute the main body of code
             do_ss_things(&andl_context);
 
+            // test ctl formula, check if transition 0 is fireable
             ctl_node_t *test = malloc(sizeof(ctl_node_t));
             test->type = CTL_ATOM;
             test->atom.num_transitions = 1;
             test->atom.fireable_transitions[0] = andl_context.transitions[0];
+
+            test = normalize(test);
+
+            printf("type == atom? %d\n", test->type == CTL_ATOM);
 
             printf("SMC on transition 0: %d\n", check(&andl_context, test));
 
