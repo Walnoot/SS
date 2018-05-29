@@ -1,4 +1,5 @@
 #include <sylvan.h>
+#include "andl.h"
 
 #ifndef CTL_H
 #define CTL_H
@@ -40,7 +41,7 @@ typedef struct ctl_node_t
         struct
         {
             // not sure about this
-            int *fireable_transitions;
+            transition_t *fireable_transitions;
             int num_transitions;
         } atom;
     };

@@ -266,7 +266,7 @@ ctl_node_t *parse_xml_to_ctl(xmlNode *node) {
         return parse_xml_to_ctl(xmlNextElementSibling(node));
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "transition") == 0) {
-        //TODO what to do here? I don't think this case is needed.
+        warn("Invalid XML - got transition node outside of an is-fireable node");
         return NULL;
     }
     else if (xmlStrcmp(node->name, (const xmlChar*) "is-fireable") == 0) {
