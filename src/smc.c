@@ -129,35 +129,56 @@ BDD check_BDD_conjunction(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 
 	BDD left = check_BDD(model, formula->binary.left);
+	sylvan_protect(&left);
+
 	BDD right = check_BDD(model, formula->binary.right);
-	return sylvan_and(left, right);
+	sylvan_protect(&right);
+
+	BDD result = sylvan_and(left, right);
+	
+	sylvan_unprotect(&left);
+	sylvan_unprotect(&right);
+
+	return result;
 }
 
 BDD check_BDD_disjunction(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
-	
+
 	BDD left = check_BDD(model, formula->binary.left);
+	sylvan_protect(&left);
+
 	BDD right = check_BDD(model, formula->binary.right);
-	return sylvan_or(left, right);
+	sylvan_protect(&right);
+
+	BDD result = sylvan_or(left, right);
+	
+	sylvan_unprotect(&left);
+	sylvan_unprotect(&right);
+
+	return result;
 }
 
 BDD check_BDD_EX(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
-	
-	BDD relation; //TODO: construct combined R from R1, R2...Rn
-	BDD vars;
 
-	return sylvan_relprev(model->relation, check_BDD(model, formula->unary.child), model->variables);
-	//return sylvan_relprev(relation, check_BDD(model, formula->unary.child), vars);
+	BDD space = check_BDD(model, formula->unary.child);
+	sylvan_protect(&space);
+
+	BDD result = sylvan_relprev(model->relation, space, model->variables);
+
+	sylvan_unprotect(&space);
+
+	return result;
 }
 
 BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD a = check_BDD(model, formula->binary.left);
-	BDD b = check_BDD(model, formula->binary.right);
-
 	sylvan_protect(&a);
+
+	BDD b = check_BDD(model, formula->binary.right);
 	sylvan_protect(&b);
 
 	BDD z = b;
@@ -177,7 +198,6 @@ BDD check_BDD_EG(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD a = check_BDD(model, formula->unary.child);
-
 	sylvan_protect(&a);
 
 	BDD z = a;
@@ -185,8 +205,6 @@ BDD check_BDD_EG(smc_model_t *model, ctl_node_t *formula) {
 	while (z != old) {
 		old = z;
 		z = sylvan_and(z, sylvan_relprev(model->relation, z, model->variables));
-
-        //z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
 	}
 
 	sylvan_unprotect(&a);
