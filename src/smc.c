@@ -183,7 +183,9 @@ BDD check_BDD_EG(smc_model_t *model, ctl_node_t *formula) {
 	BDD old = (BDD) NULL; //assume BDD identifiers are never equal to NULL
 	while (z != old) {
 		old = z;
-		z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
+		z = sylvan_and(z, sylvan_relprev(model->relation, z, model->variables));
+
+        //z = sylvan_or(z, sylvan_and(a, sylvan_relprev(model->relation, z, model->variables)));
 	}
 
 	sylvan_unprotect(&a);
