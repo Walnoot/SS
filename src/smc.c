@@ -129,16 +129,34 @@ BDD check_BDD_conjunction(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 
 	BDD left = check_BDD(model, formula->binary.left);
+	sylvan_protect(&left);
+
 	BDD right = check_BDD(model, formula->binary.right);
-	return sylvan_and(left, right);
+	sylvan_protect(&right);
+
+	BDD result = sylvan_and(left, right);
+	
+	sylvan_unprotect(&left);
+	sylvan_unprotect(&right);
+
+	return result;
 }
 
 BDD check_BDD_disjunction(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
-	
+
 	BDD left = check_BDD(model, formula->binary.left);
+	sylvan_protect(&left);
+
 	BDD right = check_BDD(model, formula->binary.right);
-	return sylvan_or(left, right);
+	sylvan_protect(&right);
+
+	BDD result = sylvan_or(left, right);
+	
+	sylvan_unprotect(&left);
+	sylvan_unprotect(&right);
+
+	return result;
 }
 
 BDD check_BDD_EX(smc_model_t *model, ctl_node_t *formula) {
