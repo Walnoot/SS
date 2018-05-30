@@ -73,7 +73,7 @@ init_sylvan()
     lace_startup(0, NULL, NULL);
 
     /* initialize the node table and cache with minimum size 2^20 entries, and
-     * maximum 2^25 entries */
+     * maximum 2^27 entries */
     sylvan_init_package(1LL<<20,1LL<<27,1LL<<20,1LL<<27);
 
     // initialize Sylvan's BDD sub system
