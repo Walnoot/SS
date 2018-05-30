@@ -147,7 +147,8 @@ BDD check_BDD_EX(smc_model_t *model, ctl_node_t *formula) {
 	BDD relation; //TODO: construct combined R from R1, R2...Rn
 	BDD vars;
 
-	return sylvan_relprev(relation, check_BDD(model, formula->unary.child), vars);
+	return sylvan_relprev(model->relation, check_BDD(model, formula->unary.child), model->variables);
+	//return sylvan_relprev(relation, check_BDD(model, formula->unary.child), vars);
 }
 
 BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {

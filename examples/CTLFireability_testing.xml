@@ -3,7 +3,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-0</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <all-paths>
         <finally>
           <is-fireable>
@@ -20,7 +20,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-1</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <all-paths>
         <finally>
           <is-fireable>
@@ -37,7 +37,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-2</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <all-paths>
         <next>
           <disjunction>
@@ -86,7 +86,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-3</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <all-paths>
         <finally>
           <conjunction>
@@ -140,7 +140,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-4</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <disjunction>
         <disjunction>
           <exists-path>
@@ -225,7 +225,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-5</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <negation>
         <conjunction>
           <conjunction>
@@ -303,7 +303,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-6</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <exists-path>
         <until>
           <before>
@@ -335,7 +335,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-7</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <disjunction>
         <disjunction>
           <all-paths>
@@ -396,7 +396,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-8</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <negation>
         <negation>
           <negation>
@@ -439,7 +439,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-9</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <conjunction>
         <all-paths>
           <globally>
@@ -493,7 +493,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-10</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <is-fireable>
         <transition>End_4</transition>
         <transition>End_3</transition>
@@ -506,7 +506,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-11</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <disjunction>
         <disjunction>
           <conjunction>
@@ -645,7 +645,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-12</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- T -->
       <conjunction>
         <disjunction>
           <exists-path>
@@ -758,7 +758,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-13</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <conjunction>
         <all-paths>
           <next>
@@ -823,7 +823,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-14</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <is-fireable>
         <transition>FF1b_2</transition>
         <transition>FF1b_3</transition>
@@ -836,7 +836,7 @@
   <property>
     <id>Philosophers-COL-000005-CTLFireability-15</id>
     <description>Automatically generated</description>
-    <formula>
+    <formula> <!-- F -->
       <conjunction>
         <conjunction>
           <is-fireable>
