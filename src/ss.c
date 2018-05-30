@@ -257,7 +257,7 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
         if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
             return ctl_make_AG(parse_formula_to_ctl(grandChild, andl_context));
-        }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
             return ctl_make_AF(parse_formula_to_ctl(grandChild, andl_context));
         } else if (xmlStrcmp(child->name, (const xmlChar*) "next") == 0) {
@@ -281,7 +281,7 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
         if (xmlStrcmp(child->name, (const xmlChar*) "globally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
             return ctl_make_EG(parse_formula_to_ctl(grandChild, andl_context));
-        }else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
+        } else if (xmlStrcmp(child->name, (const xmlChar*) "finally") == 0) {
             xmlNode *grandChild = xmlFirstElementChild(child);
             return ctl_make_EF(parse_formula_to_ctl(grandChild, andl_context));
         } else if (xmlStrcmp(child->name, (const xmlChar*) "next") == 0) {
@@ -516,7 +516,7 @@ int main(int argc, char** argv)
 
                     print_ctl(normalized);
 
-                    printf("\nSMC outcome for %d: %s\n\n", i, check(&andl_context, normalized) ? "T" : "F");
+                    printf("\nSMC outcome for formula %d: %s\n\n", i, check(&andl_context, normalized) ? "T" : "F");
                 }
 
                 //TODO do something with the formulae
