@@ -8,15 +8,24 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD intial_state = generate_initial_state(andl_context);
-	BDD relation = sylvan_false;
-	BDD vars = sylvan_set_empty();
-
 	sylvan_protect(&intial_state);
+	
+	BDD relation = sylvan_false;
 	sylvan_protect(&relation);
+
+	BDD vars = sylvan_set_empty();
 	sylvan_protect(&vars);
 
 	for (int i = 0; i < andl_context->num_transitions; i++) {
-		relation = sylvan_or(relation, generate_relation(andl_context->transitions + i));
+		// printf("building relation, loop %d, node count %d\n", i, mtbdd_nodecount(relation));
+
+		BDD rel = generate_relation(andl_context->transitions + i);
+		sylvan_protect(&rel);
+
+		relation = sylvan_or(relation, rel);
+
+		sylvan_unprotect(&rel);
+
 		BDD variables = generate_vars(andl_context->transitions + i);
 		sylvan_protect(&variables);
 
@@ -77,6 +86,7 @@ BDD check_BDD_atom(smc_model_t *model, ctl_node_t *formula) {
 	sylvan_protect(&result);
 	
 	if(formula->atom.num_transitions == -1) {
+		// -1 marks true value
 		result = sylvan_true;
 	} else {
 		result = sylvan_false;

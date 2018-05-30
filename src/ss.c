@@ -68,16 +68,18 @@ load_andl(andl_context_t *andl_context, const char *name)
 void
 init_sylvan()
 {
-    int n_workers = 0; // auto-detect
-    lace_init(n_workers, 0);
+    int n_workers = 1; // auto-detect
+    lace_init(n_workers, 40960000);
     lace_startup(0, NULL, NULL);
 
     /* initialize the node table and cache with minimum size 2^20 entries, and
      * maximum 2^25 entries */
-    sylvan_init_package(1LL<<20,1LL<<25,1LL<<20,1LL<<25);
+    sylvan_init_package(1LL<<20,1LL<<27,1LL<<20,1LL<<27);
 
     // initialize Sylvan's BDD sub system
     sylvan_init_bdd();
+
+    // sylvan_gc_disable();
 }
 
 /**
