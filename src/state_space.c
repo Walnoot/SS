@@ -1,5 +1,8 @@
 #include "state_space.h"
 
+/*
+ * Construct a BDD representing the initial state. Every place is represented with 1 variable in the BDD.
+ */
 BDD generate_initial_state(andl_context_t *andl_context) {
     LACE_ME;
 
@@ -24,6 +27,9 @@ BDD generate_initial_state(andl_context_t *andl_context) {
     return init;
 }
 
+/*
+ * Generate a BDD representing the relation of 1 transition. 
+ */
 BDD generate_relation(transition_t *transition) {
     LACE_ME;
 
@@ -49,6 +55,9 @@ BDD generate_relation(transition_t *transition) {
     return relation;
 }
 
+/*
+ * Generate the list of variables changed in the relation corresponding to the given transition.
+ */
 BDD generate_vars(transition_t *transition) {
     LACE_ME;
 
@@ -65,6 +74,9 @@ BDD generate_vars(transition_t *transition) {
     return vars;
 }
 
+/*
+ * Generate a map which renames all of the primed variables to the regular variables.
+ */
 BDD generate_map(andl_context_t *andl_context) {
     LACE_ME;
 

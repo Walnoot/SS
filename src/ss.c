@@ -112,26 +112,9 @@ do_ss_things(andl_context_t *andl_context)
     warn("There are %d out arcs", andl_context->num_out_arcs);
     // warn("Current transition: %s", andl_context->current_trans);
 
-    // for (int i = 0; i < andl_context->num_places; i++) {
-    //     warn("place: %s = %d", andl_context->places[i].name, andl_context->places[i].initial_marking);
-    // }
-
-    // for (int i = 0; i < andl_context->num_transitions; i++) {
-    //     transition_t *transition = andl_context->transitions + i;
-    //     warn("transition: %s", transition->name);
-
-    //     for (int j = 0; j < transition->num_arcs; j++) {
-    //         arc_t *arc = transition->arcs + j;
-
-    //         if (arc->dir == ARC_IN) {
-    //             warn("\tarc: %s (IN)", arc->place->name);
-    //         } else {
-    //             warn("\tarc: %s (OUT)", arc->place->name);
-    //         }
-    //     }
-    // }
-
     LACE_ME;
+
+    // generate the BDDs of the initial state and relations
 
     BDD init = generate_initial_state(andl_context);
     sylvan_protect(&init);
@@ -144,7 +127,7 @@ do_ss_things(andl_context_t *andl_context)
         vars[i] = generate_vars(andl_context->transitions + i);
     }
 
-    // bfs
+    // perform the BFS
 
     BDD map = generate_map(andl_context);
     sylvan_protect(&map);
@@ -182,6 +165,7 @@ do_ss_things(andl_context_t *andl_context)
     fclose(f);
 }
 
+// convert a xml representation to the internal representation of the CTL formula.
 ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
     if (node == NULL) {
         warn("Invalid XML");
@@ -202,6 +186,7 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
         atomNode->atom.num_transitions = 0;
         atomNode->atom.fireable_transitions = NULL;
 
+        // keep track of the size of the array allocated for the transitions in this atom
         int buf_size = 0;
 
         while (transitionNode != NULL) {
@@ -215,11 +200,12 @@ ctl_node_t *parse_formula_to_ctl(xmlNode *node, andl_context_t *andl_context) {
                     //we found the transition with the same name!
 
                     if (buf_size == 0) {
+                        // allocate initial buffer size
                         buf_size = 8;
                         atomNode->atom.fireable_transitions = malloc(sizeof(transition_t) * buf_size);
                     } else if (buf_size == atomNode->atom.num_transitions - 1) {
+                        // exponentially grow the buffer size
                         buf_size *= 2;
-                        printf("buf size: %d\n", buf_size);
                         atomNode->atom.fireable_transitions = realloc(atomNode->atom.fireable_transitions,
                                 sizeof(transition_t) * buf_size);
                     }
@@ -421,6 +407,7 @@ static ctl_node_t *parse_xml_property(xmlNode *node, andl_context_t *andl_contex
  */
 static ctl_node_t **parse_xml(xmlNode *node, andl_context_t *andl_context)
 {
+    // construct a list of pointers to the CTL formulas
     ctl_node_t **res = NULL;
     int buf_size = 0;
     int num_formulas = 0;
@@ -461,7 +448,7 @@ static ctl_node_t **parse_xml(xmlNode *node, andl_context_t *andl_context)
 /**
  * \brief parses the XML file name.
  *
- * \returns 0 on success, 1 on failure.
+ * \returns a list of CTL formulas
  */
 static ctl_node_t **load_xml(const char* name, andl_context_t *andl_context)
 {
@@ -501,10 +488,12 @@ int main(int argc, char** argv)
             warn("Successful parse of file '%s' :)", name);
             if (argc == 3) {
                 const char *formulas = argv[2];
-                ctl_node_t **ctl_formulae = load_xml(formulas, &andl_context);
+                // load all formulas from the XML file
+                ctl_node_t **ctl_formulas = load_xml(formulas, &andl_context);
 
-                for (int i = 0; ctl_formulae[i] != NULL; i++) {
-                    ctl_node_t *formula = ctl_formulae[i];
+                // the list of ctl formulas is NULL terminated
+                for (int i = 0; ctl_formulas[i] != NULL; i++) {
+                    ctl_node_t *formula = ctl_formulas[i];
 
                     printf("\nformula %d\n\n", i);
 
@@ -518,21 +507,9 @@ int main(int argc, char** argv)
 
                     printf("\nSMC outcome for formula %d: %s\n\n", i, check(&andl_context, normalized) ? "T" : "F");
                 }
-
-                //TODO do something with the formulae
-
-                // printf("Input formula: \n");
-                // print_ctl(ctl_formula);
-
-                // ctl_node_t *norm = normalize(ctl_formula);
-
-                // printf("Reduced formula:\n");
-                // print_ctl(norm);
-
-                // printf("SMC check: %d\n", check(&andl_context, norm));
             }
 
-            // execute the main body of code
+            // generate the whole state space and print the SAT count
             do_ss_things(&andl_context);
 
             deinit_sylvan();

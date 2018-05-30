@@ -17,8 +17,6 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 	sylvan_protect(&vars);
 
 	for (int i = 0; i < andl_context->num_transitions; i++) {
-		// printf("building relation, loop %d, node count %d\n", i, mtbdd_nodecount(relation));
-
 		BDD rel = generate_relation(andl_context->transitions + i);
 		sylvan_protect(&rel);
 
@@ -29,6 +27,7 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 		BDD variables = generate_vars(andl_context->transitions + i);
 		sylvan_protect(&variables);
 
+		// add all variables used in this relation to the set of all variables that occurs in a relation
 		while(!sylvan_set_isempty(variables)) {
 			vars = sylvan_set_add(vars, sylvan_set_first(variables));
 			variables = sylvan_set_next(variables);
@@ -46,6 +45,7 @@ int check(andl_context_t *andl_context, ctl_node_t *formula) {
 
 	// printf("SMC SAT count: %f\n", mtbdd_satcount(state_space, andl_context->num_places));
 
+	// check if the initial state is in the state space
 	int result = sylvan_and(intial_state, sylvan_not(state_space)) == sylvan_false;
 
 	sylvan_unprotect(&intial_state);
@@ -92,7 +92,7 @@ BDD check_BDD_atom(smc_model_t *model, ctl_node_t *formula) {
 		result = sylvan_false;
 
 		for (int i = 0; i < formula->atom.num_transitions; i++) {
-			// check precondition of transition
+			// check precondition of transition, so every the place of every in arc needs to have a token
 
 			BDD transition_pre = sylvan_true;
 			sylvan_protect(&transition_pre);

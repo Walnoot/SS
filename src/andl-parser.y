@@ -242,10 +242,6 @@ arc
             }
 
 
-            //printf("arc, transition: %s, num arcs: %d, buf size: %d\n", cur_trans->name, cur_trans->num_arcs, cur_trans->arcs_buf_size);
-
-            //printf("%s (#%d)\n", (andl_context->transitions + 0)->name, andl_context->num_transitions);
-
             cur_trans->arcs[cur_trans->num_arcs] = arc;
             cur_trans->num_arcs++;
 

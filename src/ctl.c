@@ -48,7 +48,7 @@ ctl_node_t *normalize(ctl_node_t *node) {
     return NULL;
 }
 
-
+// print this CTL formula to stdout, useful for debugging
 void print_ctl_rec(ctl_node_t *node) {
 	if (node == NULL) {
 		printf("NULL");
