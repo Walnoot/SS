@@ -1,5 +1,17 @@
 # Software Science Project 1, assignment 2
 
+### Running the model checker
+
+`./run_smc.bash <directory>` e.g. `./run_smc.bash examples`
+
+#### Code layout
+
+- ss.c contains the main function as well as parsing the xml-encoded formulas.
+- ctl.h defines the ctl abstract syntax tree.
+- ctl.c contains implementations for normalizing ctl formulas.
+- smc.h models a kripke structure using BDDs.
+- smc.c contains implementations for checking ctl formulas on the model.
+
 ## Introduction
 This repository contains all files necessary for the Software Science project 1, assignment 2.
 This README will first explain how to configure this autotools project
