@@ -143,20 +143,24 @@ BDD check_BDD_disjunction(smc_model_t *model, ctl_node_t *formula) {
 
 BDD check_BDD_EX(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
-	
-	BDD relation; //TODO: construct combined R from R1, R2...Rn
-	BDD vars;
 
-	return sylvan_relprev(relation, check_BDD(model, formula->unary.child), vars);
+	BDD space = check_BDD(model, formula->unary.child);
+	sylvan_protect(&space);
+
+	BDD result = sylvan_relprev(model->relation, space, model->variables);
+
+	sylvan_unprotect(&space);
+	
+	return result;
 }
 
 BDD check_BDD_EU(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD a = check_BDD(model, formula->binary.left);
-	BDD b = check_BDD(model, formula->binary.right);
-
 	sylvan_protect(&a);
+
+	BDD b = check_BDD(model, formula->binary.right);
 	sylvan_protect(&b);
 
 	BDD z = b;
@@ -176,7 +180,6 @@ BDD check_BDD_EG(smc_model_t *model, ctl_node_t *formula) {
 	LACE_ME;
 	
 	BDD a = check_BDD(model, formula->unary.child);
-
 	sylvan_protect(&a);
 
 	BDD z = a;
